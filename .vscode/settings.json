@@ -1,0 +1,14 @@
+{
+  "search.exclude": {
+    "/node_modules": true,
+    "benchmark": true,
+    "bin": true,
+    "declarations": true,
+    "examples": true,
+    "hot": true,
+    "schemas": true,
+    "setup": true,
+    "test": true,
+    "tooling": true
+  }
+}
