@@ -52,15 +52,16 @@ import {
 	NewExpression,
 	ObjectExpression,
 	ObjectPattern,
+	PrivateIdentifier,
 	Program,
 	Property,
+	PropertyDefinition,
 	RegExpLiteral,
 	RestElement,
 	ReturnStatement,
 	SequenceExpression,
 	SimpleCallExpression,
 	SimpleLiteral,
-	SourceLocation,
 	SpreadElement,
 	Super,
 	SwitchCase,
@@ -358,6 +359,7 @@ declare abstract class AsyncQueue<T, K, R> {
 	isProcessing(item: T): boolean;
 	isQueued(item: T): boolean;
 	isDone(item: T): boolean;
+	clear(): void;
 }
 declare class AsyncWebAssemblyModulesPlugin {
 	constructor(options?: any);
@@ -2375,6 +2377,7 @@ declare interface ContextModuleOptions {
 	include?: RegExp;
 	exclude?: RegExp;
 	groupOptions?: RawChunkGroupOptions;
+	typePrefix?: string;
 	category?: string;
 
 	/**
@@ -4557,7 +4560,7 @@ declare class JavascriptParser extends Parser {
 						| FunctionDeclaration
 						| VariableDeclaration
 						| ClassDeclaration
-						| PrivateIdentifierNode
+						| PrivateIdentifier
 					),
 					number
 				],
@@ -4661,7 +4664,7 @@ declare class JavascriptParser extends Parser {
 		>;
 		classBodyElement: SyncBailHook<
 			[
-				MethodDefinition | PropertyDefinitionNode,
+				MethodDefinition | PropertyDefinition,
 				ClassExpression | ClassDeclaration
 			],
 			boolean | void
@@ -4669,7 +4672,7 @@ declare class JavascriptParser extends Parser {
 		classBodyValue: SyncBailHook<
 			[
 				Expression,
-				MethodDefinition | PropertyDefinitionNode,
+				MethodDefinition | PropertyDefinition,
 				ClassExpression | ClassDeclaration
 			],
 			boolean | void
@@ -4985,7 +4988,7 @@ declare class JavascriptParser extends Parser {
 			| FunctionDeclaration
 			| VariableDeclaration
 			| ClassDeclaration
-			| PrivateIdentifierNode,
+			| PrivateIdentifier,
 		commentsStartPos: number
 	): boolean;
 	getComments(range?: any): any[];
@@ -5793,11 +5796,13 @@ type LoaderContext<OptionsType> = NormalModuleLoaderContext<OptionsType> &
 	LoaderRunnerLoaderContext<OptionsType> &
 	LoaderPluginLoaderContext &
 	HotModuleReplacementPluginLoaderContext;
-type LoaderDefinition<OptionsType = {}, ContextAdditions = {}> =
-	LoaderDefinitionFunction<OptionsType, ContextAdditions> & {
-		raw?: false;
-		pitch?: PitchLoaderDefinitionFunction<OptionsType, ContextAdditions>;
-	};
+type LoaderDefinition<
+	OptionsType = {},
+	ContextAdditions = {}
+> = LoaderDefinitionFunction<OptionsType, ContextAdditions> & {
+	raw?: false;
+	pitch?: PitchLoaderDefinitionFunction<OptionsType, ContextAdditions>;
+};
 declare interface LoaderDefinitionFunction<
 	OptionsType = {},
 	ContextAdditions = {}
@@ -6918,6 +6923,7 @@ type NodeEstreeIndex =
 	| FunctionDeclaration
 	| VariableDeclaration
 	| ClassDeclaration
+	| PrivateIdentifier
 	| ExpressionStatement
 	| BlockStatement
 	| EmptyStatement
@@ -6941,6 +6947,7 @@ type NodeEstreeIndex =
 	| ExportDefaultDeclaration
 	| ExportAllDeclaration
 	| MethodDefinition
+	| PropertyDefinition
 	| VariableDeclarator
 	| Program
 	| Super
@@ -7202,7 +7209,7 @@ declare interface NormalModuleLoaderContext<OptionsType> {
 	};
 	emitFile(
 		name: string,
-		content: string,
+		content: string | Buffer,
 		sourceMap?: string,
 		assetInfo?: AssetInfo
 	): void;
@@ -8407,12 +8414,6 @@ declare interface PrintedElement {
 	element: string;
 	content: string;
 }
-declare interface PrivateIdentifierNode {
-	type: "PrivateIdentifier";
-	name: string;
-	loc?: null | SourceLocation;
-	range?: [number, number];
-}
 declare interface Problem {
 	type: ProblemType;
 	path: string;
@@ -8530,71 +8531,6 @@ declare interface ProgressPluginOptions {
 	 */
 	profile?: null | boolean;
 }
-declare interface PropertyDefinitionNode {
-	type: "PropertyDefinition";
-	key:
-		| UnaryExpression
-		| ThisExpression
-		| ArrayExpression
-		| ObjectExpression
-		| FunctionExpression
-		| ArrowFunctionExpression
-		| YieldExpression
-		| SimpleLiteral
-		| RegExpLiteral
-		| BigIntLiteral
-		| UpdateExpression
-		| BinaryExpression
-		| AssignmentExpression
-		| LogicalExpression
-		| MemberExpression
-		| ConditionalExpression
-		| SimpleCallExpression
-		| NewExpression
-		| SequenceExpression
-		| TemplateLiteral
-		| TaggedTemplateExpression
-		| ClassExpression
-		| MetaProperty
-		| Identifier
-		| AwaitExpression
-		| ImportExpression
-		| ChainExpression
-		| PrivateIdentifierNode;
-	value:
-		| null
-		| UnaryExpression
-		| ThisExpression
-		| ArrayExpression
-		| ObjectExpression
-		| FunctionExpression
-		| ArrowFunctionExpression
-		| YieldExpression
-		| SimpleLiteral
-		| RegExpLiteral
-		| BigIntLiteral
-		| UpdateExpression
-		| BinaryExpression
-		| AssignmentExpression
-		| LogicalExpression
-		| MemberExpression
-		| ConditionalExpression
-		| SimpleCallExpression
-		| NewExpression
-		| SequenceExpression
-		| TemplateLiteral
-		| TaggedTemplateExpression
-		| ClassExpression
-		| MetaProperty
-		| Identifier
-		| AwaitExpression
-		| ImportExpression
-		| ChainExpression;
-	computed: boolean;
-	static: boolean;
-	loc?: null | SourceLocation;
-	range?: [number, number];
-}
 declare class ProvidePlugin {
 	constructor(definitions: Record<string, string | string[]>);
 	definitions: Record<string, string | string[]>;
@@ -8660,11 +8596,13 @@ declare interface RawChunkGroupOptions {
 	preloadOrder?: number;
 	prefetchOrder?: number;
 }
-type RawLoaderDefinition<OptionsType = {}, ContextAdditions = {}> =
-	RawLoaderDefinitionFunction<OptionsType, ContextAdditions> & {
-		raw: true;
-		pitch?: PitchLoaderDefinitionFunction<OptionsType, ContextAdditions>;
-	};
+type RawLoaderDefinition<
+	OptionsType = {},
+	ContextAdditions = {}
+> = RawLoaderDefinitionFunction<OptionsType, ContextAdditions> & {
+	raw: true;
+	pitch?: PitchLoaderDefinitionFunction<OptionsType, ContextAdditions>;
+};
 declare interface RawLoaderDefinitionFunction<
 	OptionsType = {},
 	ContextAdditions = {}
@@ -12099,19 +12037,19 @@ declare namespace exports {
 			) => 0 | 1 | -1;
 		}
 		export namespace serialization {
-			export let register: (
+			export const register: (
 				Constructor: Constructor,
 				request: string,
 				name: string,
 				serializer: ObjectSerializer
 			) => void;
-			export let registerLoader: (
+			export const registerLoader: (
 				regExp: RegExp,
 				loader: (arg0: string) => boolean
 			) => void;
-			export let registerNotSerializable: (Constructor: Constructor) => void;
-			export let NOT_SERIALIZABLE: object;
-			export let buffersSerializer: Serializer;
+			export const registerNotSerializable: (Constructor: Constructor) => void;
+			export const NOT_SERIALIZABLE: object;
+			export const buffersSerializer: Serializer;
 			export let createFileSerializer: (fs?: any) => Serializer;
 			export { MEASURE_START_OPERATION, MEASURE_END_OPERATION };
 		}
